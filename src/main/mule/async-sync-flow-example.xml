@@ -51,7 +51,4 @@ output application/xml
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="e48d3ba9-9144-4675-ade3-fffbfa4f2dc6" message="#[payload]"/>
 	</flow>
-	<sub-flow name="Sub_Flow" doc:id="03dd8b3c-10dd-4849-8731-3d5e41ba6f9f" >
-		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="9338415c-b7a9-480a-baa0-ac4e5db7b79c" />
-	</sub-flow>
 </mule>
