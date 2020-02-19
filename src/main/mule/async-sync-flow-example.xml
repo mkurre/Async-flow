@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="b2ff3ef2-6d39-45c5-8cb5-f7c7192e8c58" >
+		<jms:active-mq-connection username="mule" password="mule" />
+	</jms:config>
+	<flow name="async-flowFlow" doc:id="2a79970d-fd4a-43d7-ab83-c223913565ea" >
+		<scheduler doc:name="Scheduler" doc:id="e160a964-aac0-47bf-9164-14ce25d348bf" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value="#[{message1:1, message2:2,message3:3,message4:4, message5:5}]" doc:name="Set Payload" doc:id="3b377ffc-832f-4f9d-a2c1-6c833e7e6b91" />
+		<async doc:name="Async" doc:id="b0bce302-a3de-48c9-87a5-5bf924827188" >
+			<ee:transform doc:name="Transform Message" doc:id="d6e99689-fb42-478f-992e-c397ea31d9e9" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"This is Async Payload":{
+	Name:payload.message1,
+	Fname: payload.message2,
+	Lname: payload.message4
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="a752cb99-f269-4ba4-a9f1-1416441518e0" message="#[payload]"/>
+			<jms:publish doc:name="Publish" doc:id="960de97d-2d57-4341-9f53-56692362b41c" config-ref="JMS_Config" destination="test_async"/>
+		</async>
+		<flow-ref doc:name="sync-call" doc:id="efd3e4e6-4748-4a09-8c2b-43800c0688ee" name="Listen-from-async-flowFlow1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2fba5468-7f3c-4ac8-ab2b-4cfdd872e365" message='#["this is mian flow payload": payload]'/>
+	</flow>
+	<flow name="Listen-from-async-flowFlow1" doc:id="cef1e594-7d79-4aae-a911-2043037eabb3" >
+		<jms:listener doc:name="Listener" doc:id="4c5250c5-a126-42c9-bd0c-82c6adfb8434" config-ref="JMS_Config" destination="test_async" inboundContentType="application/json"/>
+		<ee:transform doc:name="Transform Message" doc:id="e9deb7ec-3c1c-4797-a124-ab4a1e7275d9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+
+	{Student: payload}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e48d3ba9-9144-4675-ade3-fffbfa4f2dc6" message="#[payload]"/>
+	</flow>
+</mule>
